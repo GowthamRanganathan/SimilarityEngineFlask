@@ -1,0 +1,220 @@
+{% extends "template.html" %}
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Validate Table</h4>
+                    <h6 class="card-subtitle">Select whether the items are same or different</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>Item in Server1 DB</th>
+                                <th>Item in Server2 DB</th>
+                                <th>Similarity Score</th>
+                                <th>Is this the same item?</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                            {% for result in data %}
+                                <tr>
+                                    <input type="hidden" id="uniqueId" value="{{ result.ID_Auto }}">
+                                    <input type="hidden" id="titleId" value="{{ result.left_side_ID }}">
+                                    <input type="hidden" id="titleName" value="{{ result.left_side }}">
+                                    <input type="hidden" id="similarTitleId" value="{{ result.right_side_ID }}">
+                                    <input type="hidden" id="similarTitleName" value="{{ result.right_side }}">
+
+                                    {% if result.rowSpan != 0 %}
+                                        {% if result.rowSpan == 1 %}
+                                            <td>{{ result.left_side }}</td>
+                                        {% else %}
+                                            <td rowspan={{ result.rowSpan }}>{{ result.left_side }}</td>
+                                        {% endif %}
+                                    {% endif %}
+
+                                    <td>{{ result.right_side }}</td>
+                                    <td>{{ result.similairity }}</td>
+                                    <td class="text-nowrap" style="text-align: center;">
+                                        {% if result.isSame == 0 %}
+                                            <a id="yesButton" data-toggle="tooltip" data-value="1"
+                                               data-original-title="Yes" style="cursor: pointer"> <i
+                                                    class="fas fa-check-square text-success"></i> </a>
+
+                                            <a id="noButton" data-toggle="tooltip" data-value="2"
+                                               data-original-title="No" style="padding: 10px; cursor: pointer"> <i
+                                                    class="fas fa-window-close text-danger"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if result.isSame == 1 %}
+                                            <div class="label label-table label-success">Same</div>
+                                        {% endif %}
+                                        {% if result.isSame == 2 %}
+                                            <div class="label label-table label-danger">Different</div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+
+                            </tbody>
+
+                        </table>
+                    </div>
+                    <div class="row">
+                        <div class="col-2">
+                        </div>
+                        <div class="col-2">
+                        </div>
+                        <div class="col-2">
+                            <button type="button" id="prevBtn" class="btn btn-block btn-outline-secondary">« Previous
+                            </button>
+                        </div>
+                        <div class="col-2">
+                            <button type="button" id="nextBtn" class="btn btn-block btn-outline-secondary">Next »
+                            </button>
+                        </div>
+                        <div class="col-2">
+                        </div>
+                        <div class="col-2" id="submitBtn" style="margin-left: -45px;">
+                            <button type="button" class="btn btn-block btn-outline-success">SUBMIT</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <!--alerts CSS -->
+    <link href="/static/assets/plugins/sweetalert/sweetalert.css" rel="stylesheet" type="text/css">
+    <!---->
+    <!-- Sweet-Alert  -->
+    <script src="/static/assets/plugins/sweetalert/sweetalert.min.js"></script>
+    <script src="/static/assets/plugins/sweetalert/jquery.sweet-alert.custom.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            $("#currentActivePage").text("Validate Records");
+            $("#currentPage").text("Validate Records");
+            var jsonArr = [];
+            if (localStorage.getItem("jsonArr") === null) {
+                $.ajax({
+                    url: "/reload", //the page containing python script
+                    type: "post", //request type,
+                    dataType: 'json',
+                });
+                jsonArr = [];
+                localStorage.setItem("jsonArr", JSON.stringify(jsonArr));
+                window.location.reload();
+            } else {
+                jsonArr = JSON.parse(localStorage.getItem("jsonArr"));
+            }
+
+            $("#submitBtn").click(function () {
+                if(jsonArr.length !==0) {
+                    localStorage.clear();
+                    $.ajax({
+                        "url": "/api/v1.0/record", //the page containing python api
+                        "type": "post", //request type
+                        "data": {"data": JSON.stringify(jsonArr)},
+                        "dataType": 'json',
+                        "success": function () {
+                            swal("Success!", "Processed Successfully", "success").then(
+                                () => {
+                                   // window.location.reload();
+                                      $.ajax({
+                                          "url": "/generateFile", //the page containing python api
+                                          "type": "post", //request type
+                                           "data": {"data": JSON.stringify(jsonArr)},
+                                           "success": function () {
+                                                window.location.href= "/validatedRecords";
+                                           }
+                                      });
+                                });
+                        }
+                    });
+                }
+                else {
+                    swal("Warning!", "No Records selected", "warning")
+                }
+            });
+
+            $("#nextBtn").click(function () {
+                if (parseInt("{{id}}") < parseInt("{{totalRecord-10}}")) {
+                    let lastId = parseInt("{{ id+10}}");
+                    localStorage.setItem("jsonArr", JSON.stringify(jsonArr));
+                    window.location.href = `/validate/${lastId}`;
+                } else
+                    swal("Reached End!", "Click Submit button");
+            });
+
+            $("#prevBtn").click(function () {
+                if (parseInt("{{id}}") !== 0) {
+                    let lastId = parseInt("{{ id-10}}");
+                    localStorage.setItem("jsonArr", JSON.stringify(jsonArr));
+                    window.location.href = `/validate/${lastId}`;
+                }
+            });
+
+            $("a").click(function () {
+                let btnValue = $(this).data("value");
+                if (btnValue === 1) {
+                    jsonArr.push({
+                        ID: $(this).closest('tr').find('#uniqueId').val(),
+                        titleId: $(this).closest('tr').find('#titleId').val(),
+                        title:$(this).closest('tr').find('#titleName').val(),
+                        similarTitleId: $(this).closest('tr').find('#similarTitleId').val(),
+                        similarTitle: $(this).closest('tr').find('#similarTitleName').val(),
+                        isSame: true
+                    });
+
+                    //
+                    $.ajax({
+                        url: "/similar", //the page containing python script
+                        type: "post", //request type,
+                        dataType: 'json',
+                        data: {id: $(this).closest('tr').find('#uniqueId').val(), val: true}
+                    });
+                    //
+                    $(this).tooltip('hide');
+                    $(this).closest("td").empty().html('<div class="label label-table label-success">Same</div>');
+                } else if (btnValue === 2) {
+
+                    jsonArr.push({
+                        ID: $(this).closest('tr').find('#uniqueId').val(),
+                        titleId: $(this).closest('tr').find('#titleId').val(),
+                        title:$(this).closest('tr').find('#titleName').val(),
+                        similarTitleId: '',
+                        similarTitle: '',
+                        isSame: false
+                    });
+
+                    jsonArr.push({
+                        ID: '',
+                        titleId: $(this).closest('tr').find('#similarTitleId').val(),
+                        title:$(this).closest('tr').find('#similarTitleName').val(),
+                        similarTitleId: '',
+                        similarTitle: '',
+                        isSame: false
+                    });
+                    //
+                    $.ajax({
+                        url: "/similar", //the page containing python script
+                        type: "post", //request type,
+                        dataType: 'json',
+                        data: {id: $(this).closest('tr').find('#uniqueId').val(), val: false}
+                    });
+                    //
+
+                    $(this).tooltip('hide');
+                    $(this).closest("td").empty().html('<div class="label label-table label-danger">Different</div>');
+
+                }
+            });
+
+        });
+
+    </script>
+
+{% endblock %}

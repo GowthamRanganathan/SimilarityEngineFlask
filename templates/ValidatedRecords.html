@@ -1,0 +1,68 @@
+{% extends "template.html" %}
+{% block content %}
+    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Validated Records</h4>
+                                <h6 class="card-subtitle">All <code>validated records</code> are shown here and can be downloaded</h6>
+                                <div class="table-responsive" style="overflow-x: hidden">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Task Name</th>
+                                                <th>Added Time(UTC)</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                         {% for result in data %}
+                                            <tr>
+                                                <td>{{ result.description }}</td>
+                                                <td>{{ result.time }}</td>
+                                                <td style="text-align: center">
+                                                    <a  href= "{{ result.url }}" id="download1_s3_url">
+                                                    <i title="Similarity Records" class="btn btn-sm btn-info">Similarity Records</i></a>
+                                                     <a  href= "{{ result.download2url }}" id="download2_s3_url">
+                                                    <i title="Items Without Similar Records" class="btn btn-sm btn-info">Items Without Similar Records</i></a>
+                                                </td>
+                                            </tr>
+                                                {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+{% endblock %}
+
+{% block script %}
+
+      <style>
+        tr,td{
+            text-align: center;
+            width: 30%;
+        }
+      </style>
+
+     <script>
+
+        $(document).ready(function () {
+             localStorage.clear();
+            $("#currentActivePage").text("Validated Records");
+            $("#currentPage").text("Validated Records");
+        });
+
+        function f() {
+            $.ajax({
+                "url": "/loadS3", //the page containing python api
+                "type": "post", //request type
+                "success": function (data) {
+                    console.log(data)
+                }
+            });
+        }
+
+     </script>
+
+{% endblock %}

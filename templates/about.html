@@ -1,0 +1,37 @@
+{% extends "template.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+      <div class="card">
+          <div class="card-body">
+              <h4 class="card-title">About Similarity Engine</h4>
+              <div class="row">
+                  <div class="col-lg-4 col-md-3"><img src="/static/assets/images/About-page-icon.png" class="img-fluid"></div>
+                  <div class="col-lg-8 col-md-9">
+                          <p>Similarity Engine is programe that can that can find/extract similar text in a corpus and flag it for verification.</p>
+                          <p>For example: </p>
+                          <p> <b class="text-danger"> STEAL AND STREETS ASSOCIATES </b> and <b class="text-danger"> STEAL and S Associates L.L.C </b> will be flagged as possible similar items</p>
+                          <p> <b class="text-danger"> CAPTRIP </b> and <b class="text-danger"> CAPSTRIP 12 mm </b> will be flagged as possible similar items</p>
+                          <p> <b class="text-danger"> Copper screw, galvanized, 3/4 in. </b> and <b class="text-danger"> :  .75 screw;  copper;  gal </b> will be flagged as possible similar items</p>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+  </div>
+{% endblock %}
+
+{% block script %}
+
+<script>
+  $(document).ready(function () {
+    localStorage.clear();
+    $("#currentActivePage").text("About");
+    $("#currentPage").text("About");
+   
+  });
+
+</script>
+
+{% endblock %}
+

@@ -1,0 +1,147 @@
+{% extends "template.html" %}
+{% block content %}
+    <div class="row">
+        <div class="col-lg-12 col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Upload File to Process</h4>
+                    <label for="input-file-now">After uploading file, click process button</label>
+                    <input type="file" id="input-file-now" class="dropify" accept=".csv" multiple/>
+
+                    <div class="row button-group">
+                        <div class="col-lg-4 col-md-4"></div>
+                        <div style="padding: 10px;" class="col-lg-4 col-md-4">
+                            <button type="button" class="btn btn-block btn-lg btn-success" onclick="configureAWS()">
+                                <i id="spinnerButton" class="fa fa-spinner fa-spin" style="display: none"></i> <span
+                                    id="btnInner">Process</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block script %}
+    <!--alerts CSS -->
+    <link href="/static/assets/plugins/sweetalert/sweetalert.css" rel="stylesheet" type="text/css">
+    <!---->
+    <script src="/static/assets/plugins/dropify/dist/js/dropify.js"></script>
+    <!-- Sweet-Alert  -->
+    <script src="/static/assets/plugins/sweetalert/sweetalert.min.js"></script>
+    <script src="/static/assets/plugins/sweetalert/jquery.sweet-alert.custom.js"></script>
+    <script>
+
+        outputFile = '';
+
+        function configureAWS() {
+            if ($("#input-file-now").val() !== '') {
+                $("#btnInner").text('Processing...');
+                $("#spinnerButton").css('display', 'unset');
+
+                let form_data = new FormData();
+                for (let i = 0, file; file = outputFile[i]; i++) {
+                    form_data.append('file', file);
+                }
+                $.ajax({
+                    url: "/invokeS3", //the page containing python script
+                    type: "post", //request type,
+                    processData: false,
+                    contentType: false,
+                    cache: false,
+                    data: form_data,
+                    success: function (data) {
+                        if (data !== false) {
+                            executeAWSStepFunction(data.url)
+                        } else {
+                            swal("Error!", "Some Error occured on uploading to AWS S3", "warning");
+                            reChangeCSS()
+                        }
+                    },
+                    error: function () {
+                        swal("Error!", "Some Error occured on invoking the AWS S3", "warning");
+                        reChangeCSS()
+                    }
+                });
+            } else
+                swal("No file chosen!");
+        }
+
+        function executeAWSStepFunction(url) {
+            $.ajax({
+                url: "/invokeStepfunction", //the page containing python script
+                type: "post", //request type,
+                dataType: 'json',
+                success: function (data) {
+                    if (data == false) {
+                        swal("Error!", "Some Error occured on invoking AWS Step Function", "warning")
+                        reChangeCSS();
+                    } else {
+                         setTimeout(function () {
+                        clearS3Bucket(url);
+                                console.log(new Date($.now()));
+                    }, 3000);
+
+                    }
+                },
+                error: function () {
+                    swal("Error!", "Some Error occured on invoking the AWS StepFunction", "warning")
+                    reChangeCSS()
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            localStorage.clear();
+
+            $("#input-file-now").change(function (e) {
+                outputFile = e.target.files;
+            });
+
+            $("#currentActivePage").text("Upload File");
+            $("#currentPage").text("Upload File");
+            // Basic
+            $('.dropify').dropify();
+
+            // Translated
+            $('.dropify-fr').dropify({
+                messages: {
+                    default: 'Glissez-déposez un fichier ici ou cliquez',
+                    replace: 'Glissez-déposez un fichier ou cliquez pour remplacer',
+                    remove: 'Supprimer',
+                    error: 'Désolé, le fichier trop volumineux'
+                }
+            });
+
+        });
+
+        function clearS3Bucket(url) {
+            $.ajax({
+                url: "/clearS3Bucket", //the page containing python api
+                type: "post", //request type
+                success: function () {
+                    console.log(new Date($.now()));
+                    setTimeout(function () {
+                        swal("Success!", `File uploaded successfully to ${url}`, "success").then(
+                            () => {
+                                reChangeCSS();
+                                window.location.href = "/validate/0";
+                                console.log(new Date($.now()));
+                            });
+                    }, 1000);
+
+                },
+                error: function () {
+                    swal("Error!", "Some Error occured on invoking the AWS StepFunction", "warning");
+                    reChangeCSS();
+                }
+            });
+        }
+
+        function reChangeCSS() {
+            $("#btnInner").text('Process');
+            $("#spinnerButton").css('display', 'none');
+            $(".dropify-clear").click();
+        }
+    </script>
+{% endblock %}

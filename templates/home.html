@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<style>
+  li{
+    height: 50px;
+    padding-top: 20px;
+    
+  }
+</style>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Similarity Engine</title>
+  </head>
+  <body>
+    {% extends "template.html" %}
+    {% block content %}
+    <div style="height: 555px;">
+      <ul>
+        <li><a href="{{ url_for('home') }}">Home</a></li>
+        <li><a href="{{ url_for('about') }}">About</a></li>
+        <li><a href="{{ url_for('lang3',itemNo=0) }}">Validate Records</a></li>
+        <li><a href="{{ url_for('upload') }}">Upload File</a></li>
+      </ul>
+    </div>
+    {% endblock %}
+</body>
+</html>

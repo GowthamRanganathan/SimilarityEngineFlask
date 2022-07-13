@@ -1,0 +1,48 @@
+  
+{% extends "template.html" %}
+{% block content %}
+<!-- Row -->
+<div class="row">
+    <!-- <div class="col-12 m-t-30">
+        <h4 class="m-b-0">Text alignment</h4>
+        <p class="text-muted m-t-0 font-12">You can quickly change the text alignment<code>.text-center .text-right</code>.</p>
+    </div> -->
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="card-title">Upload File</h4>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                <a href="/upload" class="btn btn-info">Navigate</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="card-title">Validate Record</h4>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                <a href="/validate/0" class="btn btn-info">Navigate</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="card-title">Download File</h4>
+                <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                <a href="/validatedRecords" class="btn btn-info">Navigate</a>
+            </div>
+        </div>
+    </div>
+</div><!-- Row -->
+{% endblock %}
+{% block script %}
+<script>
+    $(document).ready(function () {
+        localStorage.clear();
+        $("#currentActivePage").text("Dashboard");
+        $("#currentPage").text("Dashboard");
+    });
+</script>
+    
+{% endblock %}
